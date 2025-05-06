@@ -2,6 +2,9 @@ import { upsertStreamUser } from "../lib/stream.js";
 import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 
+import bcrypt from 'bcrypt'
+
+
 export async function signup(req, res) {
   const { email, password, fullName } = req.body;
 
@@ -22,39 +25,34 @@ export async function signup(req, res) {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already exists, please use a diffrent one" });
+      return res.status(400).json({ message: "Email already exists, please use a different one" });
     }
 
     const idx = Math.floor(Math.random() * 100) + 1; // generate a num between 1-100
     const randomAvatar = `https://avatar.iran.liara.run/public/${idx}.png`;
 
+    // Hash password before saving
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     const newUser = await User.create({
       email,
       fullName,
-      password,
+      password: hashedPassword,  // Store hashed password
       profilePic: randomAvatar,
     });
 
-    // try {
-    //   await upsertStreamUser({
-    //     id: newUser._id.toString(),
-    //     name: newUser.fullName,
-    //     image: newUser.profilePic || "",
-    //   });
-    //   console.log(`Stream user created for ${newUser.fullName}`);
-    // } catch (error) {
-    //   console.log("Error creating Stream user:", error);
-    // }
-
+    // JWT Token Generation
     const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: "7d",
+      expiresIn: "7d", // Token expiration
     });
 
+    // Sending token in cookies
     res.cookie("jwt", token, {
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      httpOnly: true, // prevent XSS attacks,
-      sameSite: "strict", // prevent CSRF attacks
-      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days expiration
+      httpOnly: true,  // Prevent XSS attacks
+      sameSite: "strict",  // Prevent CSRF attacks
+      secure: process.env.NODE_ENV === "production",  // Ensure it's secure only in production
     });
 
     res.status(201).json({ success: true, user: newUser });
