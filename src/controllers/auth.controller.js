@@ -43,7 +43,7 @@ export async function signup(req, res) {
     });
 
     // JWT Token Generation
-    const token = jwt.sign({ userId: newUser._id }, process.env.JWT_SECRET_KEY, {
+    const token = jwt.sign({ userId: newUser._id }, "secret", {
       expiresIn: "7d", // Token expiration
     });
 
