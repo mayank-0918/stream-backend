@@ -17,13 +17,14 @@ const __dirname = path.resolve();
 
 app.use(
   cors({
-    origin: ["https://stream-frontend-alpha.vercel.app",  "http://localhost:5173"],
+    origin: ["https://stream-frontend-alpha.vercel.app", "http://localhost:5173"],
     credentials: true, // allow frontend to send cookies
   })
 );
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(express.urlencoded({extended:true}));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
