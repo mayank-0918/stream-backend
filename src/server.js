@@ -17,7 +17,7 @@ const __dirname = path.resolve();
 
 app.use(
   cors({
-    origin: "https://stream-frontend-alpha.vercel.app",
+    origin: ["https://stream-frontend-alpha.vercel.app",  "http://localhost:5173"],
     credentials: true, // allow frontend to send cookies
   })
 );
